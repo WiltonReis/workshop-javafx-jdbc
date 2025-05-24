@@ -1,5 +1,6 @@
 package application;
 
+import entities.Department;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
