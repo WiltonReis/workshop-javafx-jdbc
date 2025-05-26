@@ -5,21 +5,21 @@ import java.util.Objects;
 
 public class Department implements Serializable {
 
-    private Long id;
+    private Integer id;
     private String name;
 
     public Department(){}
 
-    public Department(Long id, String name) {
+    public Department(Integer id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
