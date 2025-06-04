@@ -1,6 +1,7 @@
 package gui;
 
 import application.Main;
+import db.DbException;
 import gui.listeners.DataChangeListeners;
 import gui.util.Alerts;
 import gui.util.Utils;
@@ -23,6 +24,7 @@ import model.services.DepartmentService;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class DepartmentListController implements Initializable, DataChangeListeners {
@@ -44,6 +46,9 @@ public class DepartmentListController implements Initializable, DataChangeListen
     @FXML
     private TableColumn<Department, Department> tableColumnEdit;
 
+    @FXML
+    private TableColumn<Department, Department> tableColumnDelete;
+
     private ObservableList<Department> obsList;
 
     @FXML
@@ -64,6 +69,7 @@ public class DepartmentListController implements Initializable, DataChangeListen
         obsList = FXCollections.observableArrayList(list);
         tableViewDepartment.setItems(obsList);
         initEditButtons();
+        initDeleteButtons();
     }
 
     @Override
@@ -122,6 +128,39 @@ public class DepartmentListController implements Initializable, DataChangeListen
                                 obj, "/gui/DepartmentForm.fxml",Utils.currentStage(event)));
             }
         });
+    }
+
+    private void initDeleteButtons() {
+        tableColumnDelete.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+        tableColumnDelete.setCellFactory(param -> new TableCell<Department, Department>() {
+            private final Button button = new Button("deletar");
+            @Override
+            protected void updateItem(Department obj, boolean empty) {
+                super.updateItem(obj, empty);
+                if (obj == null) {
+                    setGraphic(null);
+                    return;
+                }
+                setGraphic(button);
+                button.setOnAction(event -> deleteDepartment(obj));
+            }
+        });
+    }
+
+    private void deleteDepartment(Department dep) {
+        Optional<ButtonType> result = Alerts.showConfirmation("Confirmar", "Tem certeza que quer deletar?");
+
+        if (result.get() == ButtonType.OK){
+            if (service == null){
+                throw new IllegalStateException("Service was null");
+            }
+            try {
+                service.delete(dep);
+                updateTableView();
+            } catch (DbException e){
+                Alerts.showAlert("Erro!", null, e.getMessage(), Alert.AlertType.ERROR);
+            }
+        }
     }
 
 

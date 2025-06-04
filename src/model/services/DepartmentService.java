@@ -19,6 +19,10 @@ public class DepartmentService {
         }
     }
 
+    public void delete(Department dep){
+        departmentDAO.delete(dep);
+    }
+
     public List<Department> findAll(){
         return departmentDAO.findAll();
     }
