@@ -4,7 +4,6 @@ import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import model.entities.Seller;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -56,10 +55,6 @@ public class Utils {
             System.err.println("Erro ao converter salário: " + text + " - " + e.getMessage());
             return null;
         }
-    }
-
-    public static LocalDate defineLocalDateFormat(LocalDate localDate, String fmt) {
-        return LocalDate.parse(localDate.format(DateTimeFormatter.ofPattern(fmt)));
     }
 
     public static String defineDecimalFormat(Double value) {

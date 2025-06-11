@@ -20,6 +20,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.entities.Department;
 import model.entities.Seller;
+import model.services.DepartmentService;
 import model.services.SellerService;
 
 import java.io.IOException;
@@ -121,7 +122,8 @@ public class SellerListController implements Initializable, DataChangeListeners 
                 controller.setSeller(sel);
                 controller.updateFormData();
             }
-            controller.setService(new SellerService());
+            controller.setServices(new SellerService(), new DepartmentService());
+            controller.loadAssociatedObjects();
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Entre com o dados no novo funcionário");

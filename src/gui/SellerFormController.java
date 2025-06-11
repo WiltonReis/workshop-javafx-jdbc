@@ -6,6 +6,7 @@ import gui.util.Alerts;
 import gui.util.Constraints;
 import gui.util.Utils;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -25,7 +26,9 @@ public class SellerFormController implements Initializable {
 
     private Seller sel;
 
-    private SellerService service;
+    private SellerService sellerService;
+
+    private DepartmentService departmentService;
 
     private List<DataChangeListeners> dataChangeListeners = new ArrayList<>();
 
@@ -45,7 +48,7 @@ public class SellerFormController implements Initializable {
     private TextField textFieldEmail;
 
     @FXML
-    private TextField textFieldBirthDate;
+    private DatePicker datePickerBirthDate;
 
     @FXML
     private TextField textFieldBaseSalary;
@@ -54,18 +57,33 @@ public class SellerFormController implements Initializable {
     private ComboBox<Department> comboBoxDepartment;
 
     @FXML
-    private Label errorLabel;
+    private Label errorLabelName;
+
+    @FXML
+    private Label errorLabelEmail;
+
+    @FXML
+    private Label errorLabelBaseSalary;
+
+    @FXML
+    private Label errorLabelBirthDate;
+
+    @FXML
+    private Label errorLabelDepartment;
+
+    private ObservableList<Department> obsList;
+
 
     @FXML
     public void addSellerAction(ActionEvent event){
-        if (service == null){
+        if (sellerService == null){
             throw new IllegalStateException("service was null");
         }
         if (sel == null){
             throw new IllegalStateException("Seller was null");
         } try {
             sel = getFormData();
-            service.insertOrUpdate(sel);
+            sellerService.insertOrUpdate(sel);
             notifyDataChangerListeners();
             Utils.currentStage(event).close();
         } catch (DbException e){
@@ -90,9 +108,21 @@ public class SellerFormController implements Initializable {
         if (textFieldName.getText() == null || textFieldName.getText().trim().equals("")){
             exception.addError("name", "O campo não pode ser vazio");
         }
+        if (textFieldEmail.getText() == null || textFieldEmail.getText().trim().equals("")){
+            exception.addError("email", "O campo não pode ser vazio");
+        }
+        if (textFieldBaseSalary.getText() == null || textFieldBaseSalary.getText().trim().equals("R$ 0,00")){
+            exception.addError("baseSalary", "O campo não pode ser vazio");
+        }
+        if (datePickerBirthDate.getValue() == null){
+            exception.addError("birthDate", "O campo não pode ser vazio");
+        }
+        if (comboBoxDepartment.getValue() == null){
+            exception.addError("department", "O campo não pode ser vazio");
+        }
         sel.setName(textFieldName.getText());
         sel.setEmail(textFieldEmail.getText());
-        sel.setBirthDate(LocalDate.parse(textFieldBirthDate.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        sel.setBirthDate(datePickerBirthDate.getValue());
         sel.setBaseSalary(Utils.tryParseSalaryfForDouble(textFieldBaseSalary));
         sel.setDepartment(comboBoxDepartment.getValue());
 
@@ -102,8 +132,9 @@ public class SellerFormController implements Initializable {
         return sel;
     }
 
-    public void setService(SellerService service){
-        this.service = service;
+    public void setServices(SellerService sellerService, DepartmentService departmentService){
+        this.sellerService = sellerService;
+        this.departmentService = departmentService;
     }
 
     public void setSeller(Seller sel){
@@ -124,10 +155,7 @@ public class SellerFormController implements Initializable {
         textFieldId.setText(String.valueOf(sel.getId()));
         textFieldName.setText(sel.getName());
         textFieldEmail.setText(sel.getEmail());
-        textFieldBirthDate.setText("");
-        if (sel.getBirthDate() != null) {
-            textFieldBirthDate.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy").format(sel.getBirthDate()));
-        }
+        datePickerBirthDate.setValue(sel.getBirthDate());
         textFieldBaseSalary.setText(Utils.defineDecimalFormat(sel.getBaseSalary()));
         comboBoxDepartment.setValue(sel.getDepartment());
     }
@@ -135,20 +163,21 @@ public class SellerFormController implements Initializable {
     private void setErrorMessages(Map<String, String> errors){
         Set<String> fields = errors.keySet();
 
-        if(fields.contains("name")){
-            errorLabel.setText(errors.get("name"));
-        }
+        errorLabelName.setText(fields.contains("name") ? errors.get("name") : "");
+        errorLabelEmail.setText(fields.contains("email") ? errors.get("email") : "");
+        errorLabelBaseSalary.setText(fields.contains("baseSalary") ? errors.get("baseSalary") : "");
+        errorLabelBirthDate.setText(fields.contains("birthDate") ? errors.get("birthDate") : "");
+        errorLabelDepartment.setText(fields.contains("department") ? errors.get("department") : "");
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initializeNodes();
-        setComboBoxDepartment();
     }
 
     public void initializeFormForNewSeller() {
-        this.sel = new Seller(); // Garante que a instância 'sel' não seja null
-        updateFormData(); // Preenche com os valores padrão (ID 0, salário 0.0, etc.)
+        this.sel = new Seller();
+        updateFormData();
     }
 
     private void initializeNodes(){
@@ -157,12 +186,13 @@ public class SellerFormController implements Initializable {
         Constraints.setTextFieldMaxLength(textFieldEmail, 40);
         Constraints.setTextFieldSalaryDynamic(textFieldBaseSalary);
         Constraints.setTextFieldMaxLength(textFieldBaseSalary, 12);
-        Constraints.setTextFieldDate(textFieldBirthDate);
     }
 
-    private void setComboBoxDepartment(){
-        DepartmentService service = new DepartmentService();
-        List<Department> list = service.findAll();
-        comboBoxDepartment.setItems(FXCollections.observableArrayList(list));
+    public void loadAssociatedObjects(){
+        if (departmentService == null){
+            throw new IllegalStateException("Service was null");
+        }
+        obsList = FXCollections.observableArrayList(departmentService.findAll());
+        comboBoxDepartment.setItems(FXCollections.observableArrayList(obsList));
     }
 }
