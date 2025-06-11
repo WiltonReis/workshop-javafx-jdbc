@@ -18,6 +18,7 @@ import model.services.SellerService;
 
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class SellerFormController implements Initializable {
@@ -69,6 +70,7 @@ public class SellerFormController implements Initializable {
             Utils.currentStage(event).close();
         } catch (DbException e){
             Alerts.showAlert("Erro ao salvar departamento", null, e.getMessage(), Alert.AlertType.ERROR);
+            System.out.println(e.getMessage());
         } catch (ValidationException e){
             setErrorMessages(e.getErrors());
         }
@@ -81,7 +83,7 @@ public class SellerFormController implements Initializable {
 
     private Seller getFormData() {
         Seller sel = new Seller();
-
+        System.out.println("chegou aqui");
         ValidationException exception = new ValidationException("Validation error");
 
         sel.setId(Utils.tryParseToInt(textFieldId.getText()));
@@ -90,8 +92,8 @@ public class SellerFormController implements Initializable {
         }
         sel.setName(textFieldName.getText());
         sel.setEmail(textFieldEmail.getText());
-        sel.setBirthDate(LocalDate.parse(textFieldBirthDate.getText()));
-        sel.setBaseSalary(Double.parseDouble(textFieldBaseSalary.getText()));
+        sel.setBirthDate(LocalDate.parse(textFieldBirthDate.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        sel.setBaseSalary(Utils.tryParseSalaryfForDouble(textFieldBaseSalary));
         sel.setDepartment(comboBoxDepartment.getValue());
 
         if (exception.getErrors().size() > 0){
@@ -117,13 +119,16 @@ public class SellerFormController implements Initializable {
 
     public void updateFormData(){
         if (sel == null){
-            throw new IllegalStateException("Department was null");
+            throw new IllegalStateException("Seller was null");
         }
         textFieldId.setText(String.valueOf(sel.getId()));
         textFieldName.setText(sel.getName());
         textFieldEmail.setText(sel.getEmail());
-        textFieldBirthDate.setText(sel.getBirthDate().toString());
-        textFieldBaseSalary.setText(String.valueOf(sel.getBaseSalary()));
+        textFieldBirthDate.setText("");
+        if (sel.getBirthDate() != null) {
+            textFieldBirthDate.setText(DateTimeFormatter.ofPattern("dd/MM/yyyy").format(sel.getBirthDate()));
+        }
+        textFieldBaseSalary.setText(Utils.defineDecimalFormat(sel.getBaseSalary()));
         comboBoxDepartment.setValue(sel.getDepartment());
     }
 
@@ -141,12 +146,18 @@ public class SellerFormController implements Initializable {
         setComboBoxDepartment();
     }
 
+    public void initializeFormForNewSeller() {
+        this.sel = new Seller(); // Garante que a instância 'sel' não seja null
+        updateFormData(); // Preenche com os valores padrão (ID 0, salário 0.0, etc.)
+    }
+
     private void initializeNodes(){
         Constraints.setTextFieldInteger(textFieldId);
         Constraints.setTextFieldMaxLength(textFieldName, 30);
         Constraints.setTextFieldMaxLength(textFieldEmail, 40);
-        Constraints.setTextFieldDouble(textFieldBaseSalary);
-        Constraints.setTextFieldMaxLength(textFieldBirthDate, 10);
+        Constraints.setTextFieldSalaryDynamic(textFieldBaseSalary);
+        Constraints.setTextFieldMaxLength(textFieldBaseSalary, 12);
+        Constraints.setTextFieldDate(textFieldBirthDate);
     }
 
     private void setComboBoxDepartment(){

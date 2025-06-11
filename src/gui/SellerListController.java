@@ -20,7 +20,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.entities.Department;
 import model.entities.Seller;
-import model.services.DepartmentService;
 import model.services.SellerService;
 
 import java.io.IOException;
@@ -70,8 +69,7 @@ public class SellerListController implements Initializable, DataChangeListeners 
 
     @FXML
     public void onAddSellerAction(ActionEvent event){
-        Seller sel = new Seller();
-        createDialogForm(sel,"SellerForm.fxml", Utils.currentStage(event));
+        createDialogForm(null,"SellerForm.fxml", Utils.currentStage(event));
     }
 
     public void setService(SellerService service){
@@ -85,8 +83,8 @@ public class SellerListController implements Initializable, DataChangeListeners 
         List<Seller> list = service.findAll();
         obsList = FXCollections.observableArrayList(list);
         tableViewSeller.setItems(obsList);
-        /*initEditButtons();
-        initDeleteButtons();*/
+        initEditButtons();
+        initDeleteButtons();
     }
 
     @Override
@@ -114,12 +112,16 @@ public class SellerListController implements Initializable, DataChangeListeners 
             FXMLLoader loader = new FXMLLoader(getClass().getResource(absolutName));
             Pane pane = loader.load();
             SellerFormController controller = loader.getController();
-            controller.setSeller(sel);
-            controller.setService(new SellerService());
 
             controller.subscribeDataChangerListeners(this);
 
-            controller.updateFormData();
+            if (sel == null) {
+                controller.initializeFormForNewSeller();
+            } else {
+                controller.setSeller(sel);
+                controller.updateFormData();
+            }
+            controller.setService(new SellerService());
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Entre com o dados no novo funcionário");
@@ -134,7 +136,7 @@ public class SellerListController implements Initializable, DataChangeListeners 
         }
     }
 
-    /*private void initEditButtons() {
+    private void initEditButtons() {
         tableColumnEdit.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         tableColumnEdit.setCellFactory(param -> new TableCell<Seller, Seller>() {
             private final Button button = new Button("editar");
@@ -148,29 +150,30 @@ public class SellerListController implements Initializable, DataChangeListeners 
                 setGraphic(button);
                 button.setOnAction(
                         event -> createDialogForm(
-                                obj, "/gui/DepartmentForm.fxml",Utils.currentStage(event)));
+                                obj, "/gui/SellerForm.fxml",Utils.currentStage(event)));
             }
         });
     }
 
     private void initDeleteButtons() {
         tableColumnDelete.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-        tableColumnDelete.setCellFactory(param -> new TableCell<Department, Department>() {
+        tableColumnDelete.setCellFactory(param -> new TableCell<Seller, Seller>() {
             private final Button button = new Button("deletar");
             @Override
-            protected void updateItem(Department obj, boolean empty) {
+            protected void updateItem(Seller obj, boolean empty) {
                 super.updateItem(obj, empty);
                 if (obj == null) {
                     setGraphic(null);
                     return;
                 }
                 setGraphic(button);
-                button.setOnAction(event -> deleteDepartment(obj));
+                button.setOnAction(event -> deleteSeller(obj));
             }
         });
     }
 
-    private void deleteDepartment(Department dep) {
+
+    private void deleteSeller(Seller sel) {
         Optional<ButtonType> result = Alerts.showConfirmation("Confirmar", "Tem certeza que quer deletar?");
 
         if (result.get() == ButtonType.OK){
@@ -178,13 +181,13 @@ public class SellerListController implements Initializable, DataChangeListeners 
                 throw new IllegalStateException("Service was null");
             }
             try {
-                service.delete(dep);
+                service.delete(sel);
                 updateTableView();
             } catch (DbException e){
                 Alerts.showAlert("Erro!", null, e.getMessage(), Alert.AlertType.ERROR);
             }
         }
-    }*/
+    }
 
     private void formatDate(TableColumn<Seller, LocalDate> column, String format) {
         column.setCellFactory(col -> new TableCell<Seller, LocalDate>() {

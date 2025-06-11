@@ -35,7 +35,7 @@
             <TextField fx:id="textFieldId" editable="false" GridPane.columnIndex="1" />
             <HBox prefHeight="100.0" prefWidth="200.0" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
                <children>
-                  <Button fx:id="save" mnemonicParsing="false" onAction="#addDepartmentAction" text="Salvar" />
+                  <Button fx:id="save" mnemonicParsing="false" onAction="#addSellerAction" text="Salvar" />
                   <Button fx:id="cancel" mnemonicParsing="false" onAction="#cancelAction" text="Cancelar" />
                </children>
             </HBox>
